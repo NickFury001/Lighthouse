@@ -12,9 +12,11 @@ class Lighthouse:
 	
 	def start_callback(self, func):
 		self.start_code_callback = func
+		return func
 	
 	def stop_callback(self, func):
 		self.stop_code_callback = func
+		return func
 
 	def initialize(self):
 		if self.config['role'] == 'master':
