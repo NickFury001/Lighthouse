@@ -47,7 +47,7 @@ class Lighthouse:
 			try:
 				parent_status = self.ping_status(self.config['parent_addr'])
 
-				if parent_status == 'DOWN':
+				if parent_status == 'DOWN' and not self.status == "running":
 					print("Parent down. Checking failover...")
 					if not self.any_main_running():
 						self.promote_to_active()
