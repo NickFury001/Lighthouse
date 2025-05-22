@@ -113,13 +113,15 @@ class Lighthouse:
 	def start_main_code(self):
 		print("Starting main code...")
 		self.status = "running"
-		self.start_code_callback()
+		if self.start_code_callback:
+			self.start_code_callback()
 		# subprocess.Popen(["python3", "bot_main.py"])  # Example
 
 	def stop_main_code(self):
 		print("Stopping main code...")
 		self.status = "waiting"
-		self.stop_code_callback()
+		if self.stop_code_callback:
+			self.stop_code_callback()
 		# Terminate the subprocess or similar
 
 	def run(self):
