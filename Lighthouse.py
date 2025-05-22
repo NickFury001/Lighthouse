@@ -42,13 +42,11 @@ class Lighthouse:
 
 	def reset(self):
 		self.stop_main_code()
-		self.status = "waiting"
 		self.initialize()
 		return '', 204
 
 	def stop(self):
 		self.stop_main_code()
-		self.status = "waiting"
 		return '', 204
 
 	def monitor(self):
