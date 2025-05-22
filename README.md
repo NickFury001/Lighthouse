@@ -97,4 +97,13 @@ lh.run()
 
 ## ✅ License
 
-**License TBD** – This project is not yet licensed. Please do not use or distribute until a license is specified.
+This project is licensed under the [MIT License](./LICENSE), with an additional attribution requirement.
+
+If you use Lighthouse in a publicly accessible product — such as a bot, web app, or hosted service — you **must display the phrase**:
+
+> **"Powered by Lighthouse"**
+
+...along with a **clickable link** to the original repository:  
+**https://github.com/NickFury001/Lighthouse**
+
+See the [LICENSE](./LICENSE) file for full details.
