@@ -5,12 +5,12 @@ class Lighthouse:
 	def init(self, config_path):
 		self.config = self.load_config(config_path)
 		self.status = "waiting"
-		self.is_main_code_running = False
 		self.app = Flask(__name__)
 
 		self.register_routes()
 
 		if self.config['role'] == 'master':
+			self.notify_slaves("reset")
 			self.start_main_code()
 			self.status = "running"
 
@@ -29,7 +29,7 @@ class Lighthouse:
 	def get_status(self):
 		return jsonify({
 			'status': self.status,
-			'is_main_code_running': self.is_main_code_running
+			'slaves': self.config["slaves"]
 		})
 
 	def reset(self):
@@ -45,14 +45,15 @@ class Lighthouse:
 	def monitor(self):
 		while True:
 			try:
-				parent_status = self.ping_status(self.config['parent_address'])
+				parent_status = self.ping_status(self.config['parent_addr'])
 
 				if parent_status == 'DOWN':
 					print("Parent down. Checking failover...")
 					if not self.any_main_running():
 						self.promote_to_active()
 				else:
-					print("Parent is up.")
+					if self.config["slaves"] == []:
+						self.config["slaves"] = self.get_slaves(self.config['parent_addr'])
 
 			except Exception as e:
 				print("Error in monitor:", e)
@@ -63,16 +64,24 @@ class Lighthouse:
 		try:
 			res = requests.get(f"http://{ip}/status", timeout=2)
 			data = res.json()
-			if data['is_main_code_running']:
+			if data['status'] == "running":
 				return 'UP'
 			else:
 				return 'IDLE'
 		except:
 			return 'DOWN'
 
+	def get_slaves(self, ip):
+		try:
+			res = requests.get(f"http://{ip}/status", timeout=2)
+			data = res.json()
+			return data['slaves']
+		except:
+			return []
+
 	def any_main_running(self):
-		for ip in self.config['all_slaves'] + [self.config['parent_address']]:
-			if ip == self.config['self_address']:
+		for ip in self.config['all_slaves'] + [self.config['parent_addr']]:
+			if ip == self.config['self_addr']:
 				continue
 			if self.ping_status(ip) == 'UP':
 				return True
@@ -85,7 +94,7 @@ class Lighthouse:
 
 	def notify_slaves(self, endpoint):
 		for ip in self.config['all_slaves']:
-			if ip == self.config['self_address']:
+			if ip == self.config['self_addr']:
 				continue
 			try:
 				requests.post(f"http://{ip}{endpoint}", timeout=2)
@@ -94,13 +103,13 @@ class Lighthouse:
 
 	def start_main_code(self):
 		print("Starting main code...")
-		self.is_main_code_running = True
+		self.status = "running"
 		# subprocess.Popen(["python3", "bot_main.py"])  # Example
 
 	def stop_main_code(self):
 		print("Stopping main code...")
-		self.is_main_code_running = False
+		self.status = "waiting"
 		# Terminate the subprocess or similar
 
 	def run(self):
-		self.app.run(host=self.config["self_address"].split(":")[0], port=self.config["self_address"].split(":")[1].replace("/", ""))
+		self.app.run(host=self.config["self_addr"].split(":")[0], port=self.config["self_addr"].split(":")[1].replace("/", ""))
