@@ -116,17 +116,14 @@ class Lighthouse:
 		self.status = "running"
 		if self.start_code_callback:
 			self.start_code_callback()
-		# subprocess.Popen(["python3", "bot_main.py"])  # Example
 
 	def stop_main_code(self):
 		print("Stopping main code...")
 		self.status = "waiting"
 		if self.stop_code_callback:
 			self.stop_code_callback()
-		# Terminate the subprocess or similar
 
 	def run(self):
-		# self.app.run(host=self.config['self_addr'].split(":")[0], port=self.config['self_addr'].split(":")[1].replace("/", ""))
 		self.app = Flask(__name__)
 		self.register_routes()
 		self.initialize()
