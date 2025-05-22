@@ -1,1 +1,1 @@
-from . import Lighthouse.Lighthouse
+from . import Lighthouse
