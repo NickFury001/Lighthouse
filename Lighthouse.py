@@ -112,4 +112,5 @@ class Lighthouse:
 		# Terminate the subprocess or similar
 
 	def run(self):
-		self.app.run(host=self.config['self_addr'].split(":")[0], port=self.config['self_addr'].split(":")[1].replace("/", ""))
+		# self.app.run(host=self.config['self_addr'].split(":")[0], port=self.config['self_addr'].split(":")[1].replace("/", ""))
+		self.app.run(host="0.0.0.0", port=self.config['self_addr'].split(":")[1].replace("/", ""))
