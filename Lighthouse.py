@@ -107,7 +107,7 @@ class Lighthouse:
 			if ip == self.config['self_addr']:
 				continue
 			try:
-				requests.post(f"http://{ip}/{endpoint}", timeout=2)
+				requests.post(f"http://{ip}/{endpoint.lstrip('/')}", timeout=2)
 			except:
 				print(f"Failed to notify {ip}")
 
