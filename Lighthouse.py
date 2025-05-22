@@ -6,14 +6,15 @@ class Lighthouse:
 		self.config = self.load_config(config_path)
 		self.status = "waiting"
 		self.app = Flask(__name__)
-
 		self.register_routes()
+		self.initialize()
 
+	def initialize(self):
 		if self.config['role'] == 'master':
 			self.notify_slaves("reset")
 			self.start_main_code()
 			self.status = "running"
-		else:
+		elif not hasattr(self, 'monitor_thread') or not self.monitor_thread.is_alive():
 			self.monitor_thread = threading.Thread(target=self.monitor, daemon=True)
 			self.monitor_thread.start()
 
@@ -35,6 +36,7 @@ class Lighthouse:
 	def reset(self):
 		self.stop_main_code()
 		self.status = "waiting"
+		self.initialize()
 		return '', 204
 
 	def stop(self):
