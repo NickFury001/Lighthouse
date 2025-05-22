@@ -58,6 +58,7 @@ class Lighthouse:
 
 				if parent_status == 'DOWN' and not self.status == "running":
 					print("Parent down. Checking failover...")
+					time.sleep(5*self.config["slaves"].index(self.config['self_addr']))
 					if not self.any_main_running():
 						self.promote_to_active()
 				else:
