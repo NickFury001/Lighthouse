@@ -5,9 +5,16 @@ class Lighthouse:
 	def __init__(self, config_path):
 		self.config = self.load_config(config_path)
 		self.status = "waiting"
-		self.app = Flask(__name__)
-		self.register_routes()
-		self.initialize()
+		self.start_code_callback = None
+		self.stop_code_callback = None
+		self.start_conditions = []
+		self.app = None
+	
+	def start_callback(self, func):
+		self.start_code_callback = func
+	
+	def stop_callback(self, func):
+		self.stop_code_callback = func
 
 	def initialize(self):
 		if self.config['role'] == 'master':
@@ -106,6 +113,7 @@ class Lighthouse:
 	def start_main_code(self):
 		print("Starting main code...")
 		self.status = "running"
+		self.
 		# subprocess.Popen(["python3", "bot_main.py"])  # Example
 
 	def stop_main_code(self):
@@ -116,3 +124,6 @@ class Lighthouse:
 	def run(self):
 		# self.app.run(host=self.config['self_addr'].split(":")[0], port=self.config['self_addr'].split(":")[1].replace("/", ""))
 		self.app.run(host="0.0.0.0", port=self.config['self_addr'].split(":")[1].replace("/", ""))
+		self.app = Flask(__name__)
+		self.register_routes()
+		self.initialize()
