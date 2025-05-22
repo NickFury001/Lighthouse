@@ -1,13 +1,14 @@
 import json, time, threading, requests
 from flask import Flask, jsonify, request
 
-app = Flask(name)
-
 class Lighthouse: 
 	def init(self, config_path):
 		self.config = self.load_config(config_path)
 		self.status = "waiting"
 		self.is_main_code_running = False
+		self.app = Flask(__name__)
+
+		self.register_routes()
 
 		if self.config['role'] == 'master':
 			self.start_main_code()
@@ -19,6 +20,11 @@ class Lighthouse:
 	def load_config(self, path):
 		with open(path, 'r') as f:
 			return json.load(f)
+	
+	def register_routes(self):
+		self.app.add_url_rule("/status", "status", self.get_status, methods=["GET"])
+		self.app.add_url_rule("/reset", "reset", self.reset, methods=["POST"])
+		self.app.add_url_rule("/stop", "stop", self.stop, methods=["POST"])
 
 	def get_status(self):
 		return jsonify({
@@ -39,7 +45,7 @@ class Lighthouse:
 	def monitor(self):
 		while True:
 			try:
-				parent_status = self.ping_status(self.config['parent_ip'])
+				parent_status = self.ping_status(self.config['parent_address'])
 
 				if parent_status == 'DOWN':
 					print("Parent down. Checking failover...")
@@ -65,8 +71,8 @@ class Lighthouse:
 			return 'DOWN'
 
 	def any_main_running(self):
-		for ip in self.config['all_slaves'] + [self.config['parent_ip']]:
-			if ip == self.config['self_ip']:
+		for ip in self.config['all_slaves'] + [self.config['parent_address']]:
+			if ip == self.config['self_address']:
 				continue
 			if self.ping_status(ip) == 'UP':
 				return True
@@ -79,7 +85,7 @@ class Lighthouse:
 
 	def notify_slaves(self, endpoint):
 		for ip in self.config['all_slaves']:
-			if ip == self.config['self_ip']:
+			if ip == self.config['self_address']:
 				continue
 			try:
 				requests.post(f"http://{ip}{endpoint}", timeout=2)
@@ -96,19 +102,5 @@ class Lighthouse:
 		self.is_main_code_running = False
 		# Terminate the subprocess or similar
 
-lighthouse = Lighthouse("config.json")
-
-@app.route('/status', methods=['GET'])
-def status():
-	return lighthouse.get_status()
-
-@app.route('/reset', methods=['POST'])
-def reset():
-	return lighthouse.reset()
-
-@app.route('/stop', methods=['POST'])
-def stop():
-	return lighthouse.stop()
-
-if name == 'main': app.run(host='0.0.0.0', port=80)
-
+	def run(self):
+		self.app.run(host=self.config["self_address"].split(":")[0], port=self.config["self_address"].split(":")[1].replace("/", ""))
