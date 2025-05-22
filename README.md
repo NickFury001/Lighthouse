@@ -1,7 +1,7 @@
 
-# Lighthouse Failover System
+# Lighthouse
 
-**Lighthouse** is a lightweight, Python-based failover management system designed to ensure high availability for long-running processes such as bots or services (e.g., Discord bots). It uses a master-slave architecture where one node is active, and others are ready to take over if the master fails.
+**Lighthouse** is a lightweight, Python-based failover management system designed to ensure high availability for long-running processes such as bots or services (e.g., Discord bots). It uses a master-slave architecture where one node is active and others are ready to take over if the master fails.
 
 ## 🔧 Features
 
@@ -21,7 +21,7 @@
 
 ### 1. Prepare `config.json`
 
-Example for a master:
+Example for a **master**:
 
 ```json
 {
@@ -31,7 +31,7 @@ Example for a master:
 }
 ````
 
-Example for a slave:
+Example for a **slave**:
 
 ```json
 {
@@ -53,6 +53,8 @@ while True:
     print("Bot running...")
     time.sleep(5)
 ```
+
+> Replace `bot_main.py` with your actual script — it can be a Discord bot or any other long-running service.
 
 ### 3. Start Lighthouse
 
@@ -91,6 +93,8 @@ lh.run()
 * Use different ports and IPs per node
 * All nodes must be able to reach each other via HTTP
 * Ensure the bot process is stateless or uses external storage for shared state
+* Consider using a process manager like `systemd` or `supervisord` for production
 
 ## ✅ License
-License TBD - This project is not yet licensed. Please do not use or distribute until a license is specified.
+
+**License TBD** – This project is not yet licensed. Please do not use or distribute until a license is specified.
