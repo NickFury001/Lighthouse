@@ -2,7 +2,7 @@ import json, time, threading, requests
 from flask import Flask, jsonify, request
 
 class Lighthouse: 
-	def init(self, config_path):
+	def __init__(self, config_path):
 		self.config = self.load_config(config_path)
 		self.status = "waiting"
 		self.app = Flask(__name__)
