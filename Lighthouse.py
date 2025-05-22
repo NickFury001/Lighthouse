@@ -80,7 +80,7 @@ class Lighthouse:
 			return []
 
 	def any_main_running(self):
-		for ip in self.config['all_slaves'] + [self.config['parent_addr']]:
+		for ip in self.config['slaves'] + [self.config['parent_addr']]:
 			if ip == self.config['self_addr']:
 				continue
 			if self.ping_status(ip) == 'UP':
@@ -93,7 +93,7 @@ class Lighthouse:
 		self.notify_slaves('/reset')
 
 	def notify_slaves(self, endpoint):
-		for ip in self.config['all_slaves']:
+		for ip in self.config['slaves']:
 			if ip == self.config['self_addr']:
 				continue
 			try:
