@@ -13,9 +13,9 @@ class Lighthouse:
 			self.notify_slaves("reset")
 			self.start_main_code()
 			self.status = "running"
-
-		self.monitor_thread = threading.Thread(target=self.monitor, daemon=True)
-		self.monitor_thread.start()
+		else:
+			self.monitor_thread = threading.Thread(target=self.monitor, daemon=True)
+			self.monitor_thread.start()
 
 	def load_config(self, path):
 		with open(path, 'r') as f:
@@ -29,7 +29,7 @@ class Lighthouse:
 	def get_status(self):
 		return jsonify({
 			'status': self.status,
-			'slaves': self.config["slaves"]
+			'slaves': self.config['slaves']
 		})
 
 	def reset(self):
@@ -52,8 +52,8 @@ class Lighthouse:
 					if not self.any_main_running():
 						self.promote_to_active()
 				else:
-					if self.config["slaves"] == []:
-						self.config["slaves"] = self.get_slaves(self.config['parent_addr'])
+					if self.config['slaves'] == []:
+						self.config['slaves'] = self.get_slaves(self.config['parent_addr'])
 
 			except Exception as e:
 				print("Error in monitor:", e)
@@ -112,4 +112,4 @@ class Lighthouse:
 		# Terminate the subprocess or similar
 
 	def run(self):
-		self.app.run(host=self.config["self_addr"].split(":")[0], port=self.config["self_addr"].split(":")[1].replace("/", ""))
+		self.app.run(host=self.config['self_addr'].split(":")[0], port=self.config['self_addr'].split(":")[1].replace("/", ""))
