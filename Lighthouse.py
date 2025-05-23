@@ -117,6 +117,7 @@ class Lighthouse:
 		self.status = "running"
 		if self.start_code_callback:
 			if self.pass_flask_app:
+				print("Passing App to Callback.")
 				self.start_code_callback(self.app, self.config['self_addr'].split(":")[1])
 			else:
 				self.start_code_callback()
