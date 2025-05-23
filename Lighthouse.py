@@ -1,5 +1,5 @@
 import json, time, threading, requests
-from flask import Flask, jsonify, request
+from flask import Flask, jsonify, request, after_this_request
 
 class Lighthouse: 
 	def __init__(self, config_path):
@@ -51,7 +51,14 @@ class Lighthouse:
 		func = request.environ.get('werkzeug.server.shutdown')
 		if func is None:
 			raise RuntimeError('Not running with the Werkzeug Server')
-		threading.Thread(target=func).start()
+		@after_this_request
+		def shutdown_response():
+			# Delay in a separate thread to let the response complete
+			def delayed_shutdown():
+				time.sleep(1)
+				func()
+			threading.Thread(target=delayed_shutdown).start()
+			# return '', 204
 		return '', 204
 
 	def monitor(self):
