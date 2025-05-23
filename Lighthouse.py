@@ -22,6 +22,7 @@ class Lighthouse:
 		return func
 
 	def initialize(self):
+		print("Starting logic")
 		if self.config['role'] == 'master':
 			self.notify_slaves("reset")
 			self.start_main_code()
