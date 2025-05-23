@@ -5,14 +5,14 @@ Master <-- Slave 0 <-- Slave 1
 Master (addr 0.0.0.0:8080)
 {
 	"role": "master",
-	"self_addr": "0.0.0.0:8080"
+	"self_addr": "0.0.0.0:8080",
 	"slaves": ["0.0.0.1:8080", "0.0.0.2:8080"]
 }
 
 Slave 0 (addr 0.0.0.1:8080)
 {
 	"role": "slave",
-	"self_addr: "0.0.0.1:8080",
+	"self_addr": "0.0.0.1:8080",
 	"parent_addr": "0.0.0.0:8080",
 	"slaves": []
 }
@@ -20,7 +20,7 @@ Slave 0 (addr 0.0.0.1:8080)
 Slave 1 (addr 0.0.0.2:8080)
 {
 	"role": "slave",
-	"self_addr: "0.0.0.2:8080",
+	"self_addr": "0.0.0.2:8080",
 	"parent_addr": "0.0.0.1:8080",
 	"slaves": []
 }
