@@ -22,7 +22,6 @@ class Lighthouse:
 		if self.config['role'] == 'master':
 			self.notify_slaves("reset")
 			self.start_main_code()
-			self.status = "running"
 		elif not hasattr(self, 'monitor_thread') or not self.monitor_thread.is_alive():
 			self.monitor_thread = threading.Thread(target=self.monitor, daemon=True)
 			self.monitor_thread.start()
@@ -99,7 +98,6 @@ class Lighthouse:
 
 	def promote_to_active(self):
 		self.start_main_code()
-		self.status = "running"
 		self.notify_slaves('/reset')
 
 	def notify_slaves(self, endpoint):
