@@ -116,7 +116,7 @@ class Lighthouse:
 		self.status = "running"
 		if self.start_code_callback:
 			if self.pass_flask_app:
-				self.start_code_callback(self.app)
+				self.start_code_callback(self.app, self.config['self_addr'].split(":")[1])
 			else:
 				self.start_code_callback()
 
@@ -131,4 +131,5 @@ class Lighthouse:
 		self.register_routes()
 		threading.Thread(target=self.initialize, daemon=True).start()
 		host, port = self.config['self_addr'].split(":")
-		self.app.run(host="0.0.0.0", port=port)
+		if not self.pass_flask_app:
+			self.app.run(host="0.0.0.0", port=port)
