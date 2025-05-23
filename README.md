@@ -1,7 +1,6 @@
-
 # Lighthouse
 
-**Lighthouse** is a lightweight, Python-based failover management system designed to ensure high availability for long-running processes such as bots or services (e.g., Discord bots). It uses a master-slave architecture where one node is active and others are ready to take over if the master fails.
+**Lighthouse** is a lightweight, Python-based failover management system designed to ensure high availability for long-running processes such as bots or services (e.g., Discord bots). It uses a master-slave architecture where one node is active and others are ready to take over automatically if the master fails.
 
 ## 🔧 Features
 
@@ -10,6 +9,8 @@
 - Automatic slave promotion if the master goes down
 - RESTful API for monitoring and control
 - Callback registration for custom start/stop logic
+- Option to pass the Flask app and port to the start callback
+- Configurable monitoring interval
 
 ## 📁 Structure
 
@@ -82,6 +83,30 @@ def stop():
 lh.run()
 ```
 
+### 4. Advanced: Pass Flask App and Port
+
+If your bot or service needs access to the Flask app or dynamic port, use `pass_flask_app=True`:
+
+```python
+lh = Lighthouse("config.json", pass_flask_app=True)
+
+@lh.start_callback
+def start(app, port):
+    print(f"Starting with Flask app on port {port}")
+    # Your bot code here, using `app` if needed
+```
+
+---
+
+## ⚙️ Configuration Options
+
+| Parameter        | Description                                     | Default |
+| ---------------- | ----------------------------------------------- | ------- |
+| `pass_flask_app` | Pass `Flask` app and port to `start_callback()` | `False` |
+| `interval`       | Time (in seconds) between monitor checks        | `5`     |
+
+---
+
 ## 📡 API Endpoints
 
 * `GET /status` – Returns current status and known slaves
@@ -103,7 +128,7 @@ If you use Lighthouse in a publicly accessible product — such as a bot, web ap
 
 > **"Powered by Lighthouse"**
 
-...along with a **clickable link** to the original repository:  
-**https://github.com/NickFury001/Lighthouse**
+...along with a **clickable link** to the original repository:
+**[https://github.com/NickFury001/Lighthouse](https://github.com/NickFury001/Lighthouse)**
 
 See the [LICENSE](./LICENSE) file for full details.
