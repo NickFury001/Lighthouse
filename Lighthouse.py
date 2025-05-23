@@ -48,10 +48,10 @@ class Lighthouse:
 
 	def stop(self):
 		self.stop_main_code()
-		shutdown_func = request.environ.get('werkzeug.server.shutdown')
-		if shutdown_func is None:
+		func = request.environ.get('werkzeug.server.shutdown')
+		if func is None:
 			raise RuntimeError('Not running with the Werkzeug Server')
-		shutdown_func()
+		threading.Thread(target=func).start()
 		return '', 204
 
 	def monitor(self):
