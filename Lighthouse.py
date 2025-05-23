@@ -22,7 +22,6 @@ class Lighthouse:
 		return func
 
 	def initialize(self):
-		print("Starting logic")
 		if self.config['role'] == 'master':
 			self.notify_slaves("reset")
 			self.start_main_code()
@@ -118,7 +117,6 @@ class Lighthouse:
 		self.status = "running"
 		if self.start_code_callback:
 			if self.pass_flask_app:
-				print("Passing App to Callback.")
 				self.start_code_callback(self.app, self.config['self_addr'].split(":")[1])
 			else:
 				self.start_code_callback()
@@ -131,7 +129,6 @@ class Lighthouse:
 				self.stop_code_callback(action)
 
 	def run(self):
-		print("Starting Lighthouse.")
 		self.app = Flask(__name__)
 		self.register_routes()
 		threading.Thread(target=self.initialize, daemon=True).start()
