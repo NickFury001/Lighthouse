@@ -130,6 +130,7 @@ class Lighthouse:
 				self.stop_code_callback(action)
 
 	def run(self):
+		print("Starting Lighthouse.")
 		self.app = Flask(__name__)
 		self.register_routes()
 		threading.Thread(target=self.initialize, daemon=True).start()
