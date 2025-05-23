@@ -44,12 +44,12 @@ class Lighthouse:
 		})
 
 	def reset(self):
-		self.stop_main_code()
+		self.stop_main_code("reset")
 		self.initialize()
 		return '', 204
 
 	def stop(self):
-		self.stop_main_code()
+		self.stop_main_code("stop")
 		return '', 204
 
 	def monitor(self):
@@ -120,11 +120,12 @@ class Lighthouse:
 			else:
 				self.start_code_callback()
 
-	def stop_main_code(self):
+	def stop_main_code(self, action):
 		print("Stopping main code...")
 		self.status = "waiting"
 		if self.stop_code_callback:
-			self.stop_code_callback()
+			if self.stop_code_callback.__code__.co_argcount > 0:
+				self.stop_code_callback(action)
 
 	def run(self):
 		self.app = Flask(__name__)
