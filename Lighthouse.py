@@ -2,9 +2,10 @@ import json, time, threading, requests
 from flask import Flask, jsonify, request
 
 class Lighthouse: 
-	def __init__(self, config_path, pass_flask_app = False):
+	def __init__(self, config_path, pass_flask_app = False, interval = 5):
 		self.config = self.load_config(config_path)
 		self.pass_flask_app = pass_flask_app
+		self.monitor_interval = interval
 		self.status = "waiting"
 		self.start_code_callback = None
 		self.stop_code_callback = None
@@ -68,7 +69,7 @@ class Lighthouse:
 			except Exception as e:
 				print("Error in monitor:", e)
 
-			time.sleep(5)
+			time.sleep(self.monitor_interval)
 
 	def ping_status(self, ip):
 		try:
