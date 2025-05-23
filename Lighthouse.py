@@ -124,5 +124,6 @@ class Lighthouse:
 	def run(self):
 		self.app = Flask(__name__)
 		self.register_routes()
-		self.initialize()
-		self.app.run(host="0.0.0.0", port=self.config['self_addr'].split(":")[1], debug=True)
+		threading.Thread(target=self.initialize, daemon=True).start()
+		host, port = self.config['self_addr'].split(":")
+		self.app.run(host="0.0.0.0", port=port, debug=True)
