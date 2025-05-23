@@ -2,8 +2,9 @@ import json, time, threading, requests
 from flask import Flask, jsonify, request
 
 class Lighthouse: 
-	def __init__(self, config_path):
+	def __init__(self, config_path, pass_flask_app = False):
 		self.config = self.load_config(config_path)
+		self.pass_flask_app = pass_flask_app
 		self.status = "waiting"
 		self.start_code_callback = None
 		self.stop_code_callback = None
@@ -113,7 +114,10 @@ class Lighthouse:
 		print("Starting main code...")
 		self.status = "running"
 		if self.start_code_callback:
-			self.start_code_callback()
+			if self.pass_flask_app:
+				self.start_code_callback(self.app)
+			else:
+				self.start_code_callback()
 
 	def stop_main_code(self):
 		print("Stopping main code...")
