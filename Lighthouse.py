@@ -1,5 +1,6 @@
 import json, time, threading, requests
 from flask import Flask, jsonify, request
+from waitress import serve
 
 class Lighthouse: 
 	def __init__(self, config_path, pass_flask_app = False, interval = 5):
@@ -133,4 +134,4 @@ class Lighthouse:
 		threading.Thread(target=self.initialize, daemon=True).start()
 		host, port = self.config['self_addr'].split(":")
 		if not self.pass_flask_app:
-			self.app.run(host="0.0.0.0", port=int(port))
+			serve(self.app, host="0.0.0.0", port=int(port))

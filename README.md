@@ -121,15 +121,14 @@ def start(app, port):
 * Ensure the bot process is stateless or uses external storage for shared state
 * Consider using a process manager like `systemd` or `supervisord` for production
 
-## ✅ License
+## 🧾 License & Attribution
 
-This project is licensed under the [MIT License](./LICENSE), with an additional attribution requirement.
+This project is licensed under the [Creative Commons Attribution 4.0 International License (CC BY 4.0)](https://creativecommons.org/licenses/by/4.0/).
 
-If you use Lighthouse in a publicly accessible product — such as a bot, web app, or hosted service — you **must display the phrase**:
+You are free to use, share, and adapt this project — even commercially — as long as you give **visible credit**.
 
-> **"Powered by Lighthouse"**
+Example attribution (for about pages, docs, or UI):
 
-...along with a **clickable link** to the original repository:
-**[https://github.com/NickFury001/Lighthouse](https://github.com/NickFury001/Lighthouse)**
+> Powered by Lighthouse – https://github.com/NickFury001/Lighthouse (CC BY 4.0)
 
-See the [LICENSE](./LICENSE) file for full details.
+See the [`NOTICE`](./NOTICE) and [`LICENSE`](./LICENSE) files for details.
