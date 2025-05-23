@@ -1,6 +1,7 @@
 import json, time, threading, requests
 from flask import Flask, jsonify, request
 from waitress import serve
+from threading import Event
 
 class Lighthouse: 
 	def __init__(self, config_path, pass_flask_app = False, interval = 5):
@@ -136,4 +137,5 @@ class Lighthouse:
 			host, port = self.config['self_addr'].split(":")
 			serve(self.app, host="0.0.0.0", port=int(port))
 		else:
-			threading.Thread(target=self.initialize).start()
+			self.initialize()
+			Event().wait()
