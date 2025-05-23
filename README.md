@@ -102,6 +102,7 @@ def start(app, port):
 
 | Parameter        | Description                                     | Default |
 | ---------------- | ----------------------------------------------- | ------- |
+| `config_path`    | Path to the JSON file that defines the node’s role, address, and peers      | *(required)* |
 | `pass_flask_app` | Pass `Flask` app and port to `start_callback()` | `False` |
 | `interval`       | Time (in seconds) between monitor checks        | `5`     |
 
