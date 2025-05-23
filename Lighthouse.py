@@ -130,4 +130,4 @@ class Lighthouse:
 		self.register_routes()
 		threading.Thread(target=self.initialize, daemon=True).start()
 		host, port = self.config['self_addr'].split(":")
-		self.app.run(host="0.0.0.0", port=port, debug=True)
+		self.app.run(host="0.0.0.0", port=port)
