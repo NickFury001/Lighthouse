@@ -132,4 +132,4 @@ class Lighthouse:
 		threading.Thread(target=self.initialize, daemon=True).start()
 		host, port = self.config['self_addr'].split(":")
 		if not self.pass_flask_app:
-			self.app.run(host="0.0.0.0", port=port)
+			self.app.run(host="0.0.0.0", port=int(port))
