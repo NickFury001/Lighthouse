@@ -136,4 +136,4 @@ class Lighthouse:
 			host, port = self.config['self_addr'].split(":")
 			serve(self.app, host="0.0.0.0", port=int(port))
 		else:
-			self.initialize()
+			threading.Thread(target=self.initialize).start()
