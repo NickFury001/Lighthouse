@@ -125,6 +125,11 @@ class Lighthouse:
 
 	def get_all_statuses(self):
 		res = []
+		if self.config["self_addr"] not in self.config["slaves"]:
+			res.append({
+				'name': self.config['name'] if 'name' in self.config else 'Server',
+				'status': self.status
+			})
 		for ip in self.config['slaves']:
 			if ip == self.config['self_addr']:
 				res.append({
