@@ -122,6 +122,7 @@ class Lighthouse:
 				self.start_code_callback(self.app, self.config['self_addr'].split(':')[1])
 			else:
 				self.start_code_callback()
+
 	def get_all_statuses(self):
 		res = []
 		for ip in self.config['slaves']:
@@ -135,11 +136,14 @@ class Lighthouse:
 					response = requests.get(f'http://{ip}/status', timeout=2)
 					data = response.json()
 					res.append({
-						'name': self.config['name'] if 'name' in self.config else 'Server',
-						'status': self.status
+						'name': data['name'] if 'name' in data else 'Server',
+						'status': data['status']
 					})
 				except:
-					print(f'Failed to obtain {ip}\'s status')
+					res.append({
+						'name': 'Server',
+						'status': 'crashed'
+					})
 		return res
 
 	def stop_main_code(self, action):
