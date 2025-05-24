@@ -125,10 +125,22 @@ class Lighthouse:
 	def get_all_statuses(self):
 		res = []
 		for ip in self.config['slaves']:
-			res.append({
-				'name': self.config['name'] if 'name' in self.config else 'Server',
-				'status': self.status
-			})
+			if ip == self.config['self_addr']:
+				res.append({
+					'name': self.config['name'] if 'name' in self.config else 'Server',
+					'status': self.status
+				})
+			else:
+				try:
+					response = requests.get(f'http://{ip}/status', timeout=2)
+					data = response.json()
+					res.append({
+						'name': self.config['name'] if 'name' in self.config else 'Server',
+						'status': self.status
+					})
+				except:
+					print(f'Failed to obtain {ip}\'s status')
+		return res
 
 	def stop_main_code(self, action):
 		print('Stopping main code...')
