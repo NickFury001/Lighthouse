@@ -11,6 +11,7 @@ class Lighthouse:
 		self.stop = False
 		self.monitor_interval = interval
 		self.status = 'waiting'
+		self.custom_status = False
 		self.start_code_callback = None
 		self.stop_code_callback = None
 		self.start_conditions = []
@@ -44,6 +45,7 @@ class Lighthouse:
 		self.app.add_url_rule("/stop", "stop", self.stop, methods=["POST"])
 
 	def set_temp_status(self, status_msg = "stopped temporarily", timeout = 60):
+		self.custom_status = True
 		self.status = status_msg
 		self.timeout = timeout
 		self.stop_main_code("stop")
@@ -79,8 +81,9 @@ class Lighthouse:
 						if self.config['slaves'] == []:
 							self.config['slaves'] = self.get_slaves(self.config['parent_addr'])
 				elif self.timeout != 0:
-					if time.time()+self.timeout > time.time():
+					if time.time()+self.timeout < time.time():
 						self.stop = True
+						self.custom_status = False
 						self.monitor_thread.join()
 						self.timeout = 0
 						self.initialize()
@@ -170,7 +173,7 @@ class Lighthouse:
 
 	def stop_main_code(self, action):
 		print('Stopping main code...')
-		self.status = 'waiting'
+		self.status = 'waiting' if not self.custom_status else self.status
 		if self.stop_code_callback:
 			if self.stop_code_callback.__code__.co_argcount > 0:
 				self.stop_code_callback(action)
