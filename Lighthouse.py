@@ -4,7 +4,7 @@ from waitress import serve
 from threading import Event
 
 class Lighthouse: 
-	def __init__(self, config_path, pass_flask_app = False, interval = 5, app = None):
+	def __init__(self, config_path, pass_flask_app = False, interval = 5):
 		self.config = self.load_config(config_path)
 		self.pass_flask_app = pass_flask_app
 		self.stop = False
@@ -14,8 +14,6 @@ class Lighthouse:
 		self.start_code_callback = None
 		self.stop_code_callback = None
 		self.start_conditions = []
-		app.lighthouse = self
-		self.app = app
 		self.timeout = 0
 	
 	def start_callback(self, func):
@@ -180,7 +178,8 @@ class Lighthouse:
 			if self.stop_code_callback.__code__.co_argcount > 0:
 				self.stop_code_callback(action)
 
-	def run(self):
+	def run(self, app=None):
+		self.app = app
 		if self.app is None:
 			self.app = Flask(__name__)
 		self.register_routes()
