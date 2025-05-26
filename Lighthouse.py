@@ -111,7 +111,7 @@ class Lighthouse:
 			return []
 
 	def any_main_running(self):
-		ip_list = self.config['slaves'] if self.config['parent_addr'] in self.config['slaves'] else self.config['slaves'] + [self.config['parent_addr']]
+		ip_list = self.config['slaves'] if self.config['parent_addr'] in self.config['slaves'] else [self.config['parent_addr']] + self.config['slaves']
 		for ip in ip_list:
 			if ip == self.config['self_addr']:
 				continue
@@ -148,7 +148,7 @@ class Lighthouse:
 				'name': self.config['name'] if 'name' in self.config else 'Server',
 				'status': self.status
 			})
-		ip_list = self.config['slaves'] if self.config['parent_addr'] in self.config['slaves'] else self.config['slaves'] + [self.config['parent_addr']]
+		ip_list = self.config['slaves'] if self.config['parent_addr'] in self.config['slaves'] else [self.config['parent_addr']] + self.config['slaves']
 		for ip in ip_list:
 			if ip == self.config['self_addr']:
 				res.append({
