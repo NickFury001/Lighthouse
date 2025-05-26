@@ -7,12 +7,15 @@ class Lighthouse:
 	def __init__(self, config_path, pass_flask_app = False, interval = 5, app = None):
 		self.config = self.load_config(config_path)
 		self.pass_flask_app = pass_flask_app
+		self.monitor_thread = None
+		self.stop = False
 		self.monitor_interval = interval
 		self.status = 'waiting'
 		self.start_code_callback = None
 		self.stop_code_callback = None
 		self.start_conditions = []
 		self.app = app
+		self.timeout = 0
 	
 	def start_callback(self, func):
 		self.start_code_callback = func
@@ -23,10 +26,11 @@ class Lighthouse:
 		return func
 
 	def initialize(self):
-		if self.config['role'] == 'master':
+		if self.config['role'] == 'master' and self.timeout == 0:
 			self.notify_slaves("reset")
 			self.start_main_code()
 		elif not hasattr(self, 'monitor_thread') or not self.monitor_thread.is_alive():
+			self.stop_event = threading.Event()
 			self.monitor_thread = threading.Thread(target=self.monitor, daemon=True)
 			self.monitor_thread.start()
 
@@ -38,6 +42,11 @@ class Lighthouse:
 		self.app.add_url_rule("/status", "status", self.get_status, methods=["GET"])
 		self.app.add_url_rule("/reset", "reset", self.reset, methods=["POST"])
 		self.app.add_url_rule("/stop", "stop", self.stop, methods=["POST"])
+
+	def set_temp_status(self, status_msg = "stopped temporarily", timeout = 60):
+		self.status = status_msg
+		self.timeout = timeout
+		self.stop_main_code("stop")
 
 	def get_status(self):
 		return jsonify({
@@ -56,23 +65,31 @@ class Lighthouse:
 		return '', 204
 
 	def monitor(self):
-		while True:
+		while not self.stop:
 			try:
-				parent_status = self.ping_status(self.config['parent_addr'])
+				if self.config['role'] == "slave":
+					parent_status = self.ping_status(self.config['parent_addr'])
 
-				if parent_status == 'DOWN' and not self.status == 'running':
-					print('Parent down. Checking failover...')
-					time.sleep(5*self.config['slaves'].index(self.config['self_addr']))
-					if not self.any_main_running():
-						self.promote_to_active()
-				else:
-					if self.config['slaves'] == []:
-						self.config['slaves'] = self.get_slaves(self.config['parent_addr'])
-
+					if parent_status == 'DOWN' and not self.status == 'running':
+						print('Parent down. Checking failover...')
+						time.sleep(5*self.config['slaves'].index(self.config['self_addr']))
+						if not self.any_main_running():
+							self.promote_to_active()
+					else:
+						if self.config['slaves'] == []:
+							self.config['slaves'] = self.get_slaves(self.config['parent_addr'])
+				elif self.timeout != 0:
+					if time.time()+self.timeout > time.time():
+						self.stop = True
+						self.monitor_thread.join()
+						self.timeout = 0
+						self.initialize()
 			except Exception as e:
 				print('Error in monitor:', e)
+			
 
 			time.sleep(self.monitor_interval)
+		self.stop = False
 
 	def ping_status(self, ip):
 		try:
