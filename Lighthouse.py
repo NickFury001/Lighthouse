@@ -114,7 +114,8 @@ class Lighthouse:
 			return []
 
 	def any_main_running(self):
-		for ip in self.config['slaves'] + [self.config['parent_addr']]:
+		ip_list = self.config['slaves'] if self.config['parent_addr'] in self.config['slaves'] else self.config['slaves'] + [self.config['parent_addr']]
+		for ip in ip_list:
 			if ip == self.config['self_addr']:
 				continue
 			if self.ping_status(ip) == 'UP':
