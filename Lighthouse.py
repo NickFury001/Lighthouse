@@ -14,6 +14,7 @@ class Lighthouse:
 		self.start_code_callback = None
 		self.stop_code_callback = None
 		self.start_conditions = []
+		app.lighthouse = self
 		self.app = app
 		self.timeout = 0
 	
