@@ -67,7 +67,14 @@ class Lighthouse:
 	def monitor(self):
 		while not self.stop:
 			try:
-				if self.config['role'] == "slave":
+				if self.timeout != 0 and time.time()+self.timeout < time.time():
+					self.stop = True
+					self.custom_status = False
+					self.monitor_thread.join()
+					del self.monitor_thread
+					self.timeout = 0
+					self.initialize()
+				elif self.config['role'] == "slave":
 					parent_status = self.ping_status(self.config['parent_addr'])
 					if self.config['slaves'] == []:
 						self.config['slaves'] = self.get_slaves(self.config['parent_addr'])
@@ -76,14 +83,6 @@ class Lighthouse:
 						time.sleep(5*self.config['slaves'].index(self.config['self_addr']))
 						if not self.any_main_running():
 							self.promote_to_active()
-				elif self.timeout != 0:
-					if time.time()+self.timeout < time.time():
-						self.stop = True
-						self.custom_status = False
-						self.monitor_thread.join()
-						del self.monitor_thread
-						self.timeout = 0
-						self.initialize()
 			except Exception as e:
 				print('Error in monitor:', e)
 			
