@@ -69,15 +69,13 @@ class Lighthouse:
 			try:
 				if self.config['role'] == "slave":
 					parent_status = self.ping_status(self.config['parent_addr'])
-
+					if self.config['slaves'] == []:
+						self.config['slaves'] = self.get_slaves(self.config['parent_addr'])
 					if parent_status not in ['running', "waiting"] and not self.status == 'running':
 						print('Parent down. Checking failover...')
 						time.sleep(5*self.config['slaves'].index(self.config['self_addr']))
 						if not self.any_main_running():
 							self.promote_to_active()
-					else:
-						if self.config['slaves'] == []:
-							self.config['slaves'] = self.get_slaves(self.config['parent_addr'])
 				elif self.timeout != 0:
 					if time.time()+self.timeout < time.time():
 						self.stop = True
