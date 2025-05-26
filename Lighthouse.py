@@ -7,7 +7,6 @@ class Lighthouse:
 	def __init__(self, config_path, pass_flask_app = False, interval = 5, app = None):
 		self.config = self.load_config(config_path)
 		self.pass_flask_app = pass_flask_app
-		self.monitor_thread = None
 		self.stop = False
 		self.monitor_interval = interval
 		self.status = 'waiting'
@@ -85,6 +84,7 @@ class Lighthouse:
 						self.stop = True
 						self.custom_status = False
 						self.monitor_thread.join()
+						del self.monitor_thread
 						self.timeout = 0
 						self.initialize()
 			except Exception as e:
