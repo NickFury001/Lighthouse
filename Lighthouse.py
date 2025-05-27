@@ -101,6 +101,14 @@ class Lighthouse:
 		except:
 			return 'DOWN'
 
+	def ping_raw_status(self, ip):
+		try:
+			res = requests.get(f'http://{ip}/status', timeout=2)
+			data = res.json()
+			return data['status']
+		except:
+			return None
+
 	def get_slaves(self, ip):
 		try:
 			res = requests.get(f'http://{ip}/status', timeout=2)
