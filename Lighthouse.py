@@ -154,6 +154,7 @@ class Lighthouse:
 		if self.config["self_addr"] not in self.config["slaves"]:
 			res.append({
 				'name': self.config['name'] if 'name' in self.config else 'Server',
+				'ip': self.config['self_addr'],
 				'status': self.status
 			})
 		if self.config['role'] != 'master':
@@ -164,6 +165,7 @@ class Lighthouse:
 			if ip == self.config['self_addr']:
 				res.append({
 					'name': self.config['name'] if 'name' in self.config else 'Server',
+					'ip': self.config['self_addr'],
 					'status': self.status
 				})
 			else:
@@ -172,6 +174,7 @@ class Lighthouse:
 					data = response.json()
 					res.append({
 						'name': data['name'] if 'name' in data else 'Server',
+						'ip': ip,
 						'status': data['status']
 					})
 				except:
