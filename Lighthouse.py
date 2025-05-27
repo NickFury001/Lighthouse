@@ -75,7 +75,7 @@ class Lighthouse:
 					self.timeout = 0
 					self.initialize()
 				elif self.config['role'] == "slave":
-					parent_status = self.ping_status(self.config['parent_addr'])
+					parent_status = self.ping_raw_status(self.config['parent_addr'])
 					if self.config['slaves'] == []:
 						self.config['slaves'] = self.get_slaves(self.config['parent_addr'])
 					if parent_status not in ['running', "waiting"] and not self.status == 'running':
