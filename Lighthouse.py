@@ -111,6 +111,7 @@ class Lighthouse:
 
 	def any_main_running(self):
 		ip_list = self.config['slaves'] if self.config['parent_addr'] in self.config['slaves'] else [self.config['parent_addr']] + self.config['slaves']
+		print(ip_list)
 		for ip in ip_list:
 			if ip == self.config['self_addr']:
 				continue
