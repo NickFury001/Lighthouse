@@ -4,7 +4,7 @@ from waitress import serve
 from threading import Event
 
 class Lighthouse: 
-	def __init__(self, config_path, pass_flask_app = False, interval = 5):
+	def __init__(self, config_path, pass_flask_app = False, interval = 30):
 		self.config = self.load_config(config_path)
 		self.pass_flask_app = pass_flask_app
 		self.stop = False
