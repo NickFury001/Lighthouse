@@ -21,6 +21,7 @@ class Lighthouse:
 	def send_get(self, path, *args, **kwargs):
 		if path in self.request_cache:
 			if self.request_cache[path]['t'] > time.time():
+				print("saved request")
 				return self.request_cache[path]['response']
 		res = requests.get(path, *args, **kwargs)
 		self.request_cache[path] = {
