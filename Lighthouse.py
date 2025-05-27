@@ -147,7 +147,10 @@ class Lighthouse:
 				'name': self.config['name'] if 'name' in self.config else 'Server',
 				'status': self.status
 			})
-		ip_list = self.config['slaves'] if self.config['parent_addr'] in self.config['slaves'] else [self.config['parent_addr']] + self.config['slaves']
+		if self.config['role'] != 'master':
+			ip_list = self.config['slaves'] if self.config['parent_addr'] in self.config['slaves'] else [self.config['parent_addr']] + self.config['slaves']
+		else:
+			ip_list = self.config['slaves']
 		for ip in ip_list:
 			if ip == self.config['self_addr']:
 				res.append({
