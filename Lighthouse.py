@@ -119,7 +119,7 @@ class Lighthouse:
 			return []
 
 	def any_main_running(self):
-		ip_list = self.config['slaves'] if self.config['parent_addr'] in self.config['slaves'] else [self.config['parent_addr']] + self.config['slaves']
+		ip_list = self.config['slaves'] if self.config['role'] == 'master' or ('parent_addr' in self.config and self.config['parent_addr'] in self.config['slaves']) else [self.config['parent_addr']] + self.config['slaves']
 		for ip in ip_list:
 			if ip == self.config['self_addr']:
 				continue
