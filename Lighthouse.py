@@ -9,13 +9,24 @@ class Lighthouse:
 		self.pass_flask_app = pass_flask_app
 		self.stop = False
 		self.monitor_interval = interval
+		self.wait_step = 5
+		self.req_caching_time = interval
 		self.status = 'waiting'
 		self.custom_status = False
 		self.start_code_callback = None
 		self.stop_code_callback = None
 		self.start_conditions = []
 		self.timeout = 0
-	
+		self.request_cache = {}
+	def send_get(self, path, *args, **kwargs):
+		if path in self.request_cache:
+			if self.request_cache[path]['t'] > time.time() + self.req_caching_time:
+				return self.request_cache[path]['response']
+		res = requests.get(path, *args, **kwargs)
+		self.request_cache[path] = {
+			't': time.time() + self.req_caching_time,
+			'response': res
+		}
 	def start_callback(self, func):
 		self.start_code_callback = func
 		return func
@@ -80,7 +91,7 @@ class Lighthouse:
 						self.config['slaves'] = self.get_slaves(self.config['parent_addr'])
 					if parent_status not in ['running', "waiting"] and not self.status == 'running':
 						print('Parent down. Checking failover...')
-						time.sleep(5*self.config['slaves'].index(self.config['self_addr']))
+						time.sleep(self.wait_step*self.config['slaves'].index(self.config['self_addr']))
 						if not self.any_main_running():
 							self.promote_to_active()
 			except Exception as e:
@@ -92,7 +103,7 @@ class Lighthouse:
 
 	def ping_status(self, ip):
 		try:
-			res = requests.get(f'http://{ip}/status', timeout=2)
+			res = self.send_get(f'http://{ip}/status', timeout=2)
 			data = res.json()
 			if data['status'] == 'running':
 				return 'UP'
@@ -103,7 +114,7 @@ class Lighthouse:
 
 	def ping_raw_status(self, ip):
 		try:
-			res = requests.get(f'http://{ip}/status', timeout=2)
+			res = self.send_get(f'http://{ip}/status', timeout=2)
 			data = res.json()
 			return data['status']
 		except:
@@ -111,7 +122,7 @@ class Lighthouse:
 
 	def get_slaves(self, ip):
 		try:
-			res = requests.get(f'http://{ip}/status', timeout=2)
+			res = self.send_get(f'http://{ip}/status', timeout=2)
 			data = res.json()
 			ip_list = data['slaves'] if self.config['parent_addr'] in data['slaves'] else [self.config['parent_addr']] + data['slaves']
 			return ip_list
@@ -170,7 +181,7 @@ class Lighthouse:
 				})
 			else:
 				try:
-					response = requests.get(f'http://{ip}/status', timeout=2)
+					response = self.send_get(f'http://{ip}/status', timeout=2)
 					data = response.json()
 					res.append({
 						'name': data['name'] if 'name' in data else 'Server',
