@@ -4,7 +4,7 @@ from waitress import serve
 from threading import Event
 
 class Lighthouse: 
-	def __init__(self, config_path, pass_flask_app = False, interval = 30):
+	def __init__(self, config_path, pass_flask_app = False, interval = 5):
 		self.config = self.load_config(config_path)
 		self.pass_flask_app = pass_flask_app
 		self.stop = False
@@ -22,13 +22,13 @@ class Lighthouse:
 	def send_get(self, path, *args, **kwargs):
 		if path in self.request_cache:
 			if self.request_cache[path]['t'] > time.time():
-				print("saved request")
 				return self.request_cache[path]['response']
 		res = requests.get(path, *args, **kwargs)
 		self.request_cache[path] = {
 			't': time.time() + self.req_caching_time,
 			'response': res
 		}
+		print(res)
 		return res
 
 	def start_callback(self, func):
