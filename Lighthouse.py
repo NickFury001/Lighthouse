@@ -105,7 +105,8 @@ class Lighthouse:
 		try:
 			res = requests.get(f'http://{ip}/status', timeout=2)
 			data = res.json()
-			return data['slaves']
+			ip_list = data['slaves'] if self.config['parent_addr'] in data['slaves'] else [self.config['parent_addr']] + data['slaves']
+			return ip_list
 		except:
 			return []
 
