@@ -18,6 +18,7 @@ class Lighthouse:
 		self.start_conditions = []
 		self.timeout = 0
 		self.request_cache = {}
+
 	def send_get(self, path, *args, **kwargs):
 		if path in self.request_cache:
 			if self.request_cache[path]['t'] > time.time():
@@ -28,6 +29,8 @@ class Lighthouse:
 			't': time.time() + self.req_caching_time,
 			'response': res
 		}
+		return res
+
 	def start_callback(self, func):
 		self.start_code_callback = func
 		return func
