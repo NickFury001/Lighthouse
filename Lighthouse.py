@@ -20,7 +20,7 @@ class Lighthouse:
 		self.request_cache = {}
 	def send_get(self, path, *args, **kwargs):
 		if path in self.request_cache:
-			if self.request_cache[path]['t'] > time.time() + self.req_caching_time:
+			if self.request_cache[path]['t'] > time.time():
 				return self.request_cache[path]['response']
 		res = requests.get(path, *args, **kwargs)
 		self.request_cache[path] = {
