@@ -96,6 +96,11 @@ def stop():
         proc.terminate()
         proc.wait()
 
+@lh.update_callback
+def update(data):
+    print("Received update:", data)
+    # Handle update logic here
+
 # Optionally, you can pass a Flask app instance to lh.run(app=your_app)
 # For example:
 # app = Flask(__name__)
@@ -133,6 +138,7 @@ def start(app, port):
 * `GET /status` – Returns current status and known slaves
 * `POST /reset` – Stops main code and resets status
 * `POST /stop` – Gracefully stops the main code
+* `POST /update` – Calls the registered update callback with the JSON body of the request
 
 ## 🛠️ Notes
 
