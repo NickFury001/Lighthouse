@@ -78,6 +78,15 @@ class Lighthouse:
 				self.update_code_callback()
 		return '', 204
 
+	def send_update(self, data):
+		for ip in self.config['slaves']:
+			if ip == self.config['self_addr']:
+				continue
+			try:
+				requests.post(f'http://{ip}/update', json=data, timeout=2)
+			except Exception as e:
+				print(f'Failed to send update to {ip}: {e}')
+	
 	def monitor(self):
 		while not self.stop:
 			try:
