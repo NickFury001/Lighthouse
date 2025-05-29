@@ -13,6 +13,7 @@ class Lighthouse:
 		self.custom_status = False
 		self.start_code_callback = None
 		self.stop_code_callback = None
+		self.update_code_callback = None
 		self.start_conditions = []
 		self.timeout = 0
 	
@@ -22,6 +23,10 @@ class Lighthouse:
 	
 	def stop_callback(self, func):
 		self.stop_code_callback = func
+		return func
+	
+	def update_callback(self, func):
+		self.update_code_callback = func
 		return func
 
 	def initialize(self):
@@ -41,6 +46,7 @@ class Lighthouse:
 		self.app.add_url_rule("/status", "status", self.get_status, methods=["GET"])
 		self.app.add_url_rule("/reset", "reset", self.reset, methods=["POST"])
 		self.app.add_url_rule("/stop", "stop", self.stop, methods=["POST"])
+		self.app.add_url_rule("/update", "update", self.update, methods=["POST"])
 
 	def set_temp_status(self, status_msg = "stopped temporarily", timeout = 60):
 		self.custom_status = True
@@ -62,6 +68,14 @@ class Lighthouse:
 
 	def stop(self):
 		self.stop_main_code("stop")
+		return '', 204
+
+	def update(self):
+		if hasattr(self, 'update_code_callback') and self.update_code_callback:
+			if self.update_code_callback.__code__.co_argcount > 0:
+				self.update_code_callback(request.get_json())
+			else:
+				self.update_code_callback()
 		return '', 204
 
 	def monitor(self):
