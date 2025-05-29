@@ -1,5 +1,8 @@
 # Lighthouse
 
+![License: CC BY 4.0](https://img.shields.io/badge/License-CC%20BY%204.0-lightgrey.svg)
+![Python](https://img.shields.io/badge/python-3.7%2B-blue)
+
 **Lighthouse** is a lightweight, Python-based failover management system designed to ensure high availability for long-running processes such as bots or services (e.g., Discord bots). It uses a master-slave architecture where one node is active and others are ready to take over automatically if the master fails.
 
 ## 🔧 Features
@@ -20,7 +23,17 @@
 
 ## 🚀 Usage
 
+### 0. Install Requirements
+
+Before running Lighthouse, install the required Python packages:
+
+```sh
+pip install flask waitress requests
+```
+
 ### 1. Prepare `config.json`
+
+You can optionally add a `name` field to your config for easier identification in status responses. The `name` parameter is not required.
 
 Example for a **master**:
 
@@ -28,9 +41,10 @@ Example for a **master**:
 {
   "role": "master",
   "self_addr": "127.0.0.1:5000",
-  "slaves": ["127.0.0.1:5001", "127.0.0.1:5002"]
+  "slaves": ["127.0.0.1:5001", "127.0.0.1:5002"],
+  "name": "Main Node" // Optional
 }
-````
+```
 
 Example for a **slave**:
 
@@ -39,7 +53,8 @@ Example for a **slave**:
   "role": "slave",
   "self_addr": "127.0.0.1:5001",
   "parent_addr": "127.0.0.1:5000",
-  "slaves": []
+  "slaves": [],
+  "name": "Backup Node 1" // Optional
 }
 ```
 
@@ -64,6 +79,7 @@ In your `main.py`:
 ```python
 from Lighthouse.Lighthouse import Lighthouse
 import subprocess
+from flask import Flask
 
 lh = Lighthouse("config.json")
 proc = None
@@ -80,6 +96,10 @@ def stop():
         proc.terminate()
         proc.wait()
 
+# Optionally, you can pass a Flask app instance to lh.run(app=your_app)
+# For example:
+# app = Flask(__name__)
+# lh.run(app=app)
 lh.run()
 ```
 
@@ -100,11 +120,11 @@ def start(app, port):
 
 ## ⚙️ Configuration Options
 
-| Parameter        | Description                                     | Default |
-| ---------------- | ----------------------------------------------- | ------- |
-| `config_path`    | Path to the JSON file that defines the node’s role, address, and peers      | *(required)* |
-| `pass_flask_app` | Pass `Flask` app and port to `start_callback()` | `False` |
-| `interval`       | Time (in seconds) between monitor checks        | `5`     |
+| Parameter         | Description                                                        | Default      |
+|------------------|--------------------------------------------------------------------|-------------|
+| `config_path`    | Path to the JSON file that defines the node’s role, address, peers | *(required)*|
+| `pass_flask_app` | Pass `Flask` app and port to `start_callback()`                    | `False`     |
+| `interval`       | Time (in seconds) between monitor checks                           | `5`         |
 
 ---
 
