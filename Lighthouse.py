@@ -38,6 +38,7 @@ class Lighthouse:
 			self.start_main_code()
 		elif not hasattr(self, 'monitor_thread') or not self.monitor_thread.is_alive():
 			self.stop_event = threading.Event()
+			self.stop_monitor_thread = False
 			self.monitor_thread = threading.Thread(target=self.monitor, daemon=True)
 			self.monitor_thread.start()
 	
@@ -136,7 +137,6 @@ class Lighthouse:
 			
 
 			time.sleep(self.monitor_interval)
-		self.stop_monitor_thread = False
 
 	def ping_status(self, ip):
 		try:
