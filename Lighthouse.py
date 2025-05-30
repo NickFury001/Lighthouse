@@ -119,7 +119,7 @@ class Lighthouse:
 					self.stop_monitor_thread = True
 					self.custom_status = False
 					self.monitor_thread.join()
-					del self.monitor_thread
+					self.monitor_thread = None
 					self.timeout = 0
 					self.initialize()
 				elif self.config['role'] == "slave":
