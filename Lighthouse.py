@@ -2,6 +2,7 @@ import json, time, threading, requests
 from flask import Flask, jsonify, request
 from waitress import serve
 from threading import Event
+import logging
 
 class Lighthouse: 
 	def __init__(self, config_path, pass_flask_app = False, interval = 5):
@@ -18,6 +19,11 @@ class Lighthouse:
 		self.timeout_start = 0
 		self.timeout = 0
 		self.last_update = None
+		self.logger = logging.getLogger("Lighthouse")
+		logging.basicConfig(
+			level=logging.INFO,
+			format="%(asctime)s [%(levelname)s] %(message)s",
+		)
 	
 	def start_callback(self, func):
 		self.start_code_callback = func
@@ -32,6 +38,7 @@ class Lighthouse:
 		return func
 
 	def initialize(self):
+		self.logger.info("Initializing Lighthouse node with role '%s'", self.config.get('role'))
 		if self.config['role'] == 'master' and self.timeout == 0:
 			self.sync_from_slaves()
 			self.notify_slaves("reset")
@@ -50,18 +57,21 @@ class Lighthouse:
 				resp = requests.get(f'http://{ip}/sync', timeout=2)
 				data = resp.json()
 				if data.get('last_update'):
+					self.logger.info("Synced state from slave %s", ip)
 					# Optionally, apply this update to master
 					if self.update_code_callback:
 						self.update_code_callback(data['last_update'])
 					break  # Use the first available state
 			except Exception as e:
-				print(f"Failed to sync from slave {ip}: {e}")
+				self.logger.error(f"Failed to sync from slave {ip}: {e}")
 
 	def load_config(self, path):
+		self.logger.info("Loading config from %s", path)
 		with open(path, 'r') as f:
 			return json.load(f)
 	
 	def register_routes(self):
+		self.logger.info("Registering Flask routes")
 		self.app.add_url_rule("/status", "status", self.get_status, methods=["GET"])
 		self.app.add_url_rule("/reset", "reset", self.reset, methods=["POST"])
 		self.app.add_url_rule("/stop", "stop", self.stop, methods=["POST"])
@@ -69,6 +79,7 @@ class Lighthouse:
 		self.app.add_url_rule("/sync", "sync", self.sync, methods=["GET"])
 
 	def set_temp_status(self, status_msg = "stopped temporarily", timeout = 60):
+		self.logger.warning("Setting temporary status: '%s' for %ds", status_msg, timeout)
 		self.custom_status = True
 		self.status = status_msg
 		self.timeout_start = time.time()
@@ -76,6 +87,7 @@ class Lighthouse:
 		self.stop_main_code("stop")
 
 	def get_status(self):
+		self.logger.debug("Status requested")
 		return jsonify({
 			'name': self.config['name'] if 'name' in self.config else 'Server',
 			'status': self.status,
@@ -83,18 +95,22 @@ class Lighthouse:
 		})
 
 	def reset(self):
+		self.logger.info("Reset endpoint called")
 		self.stop_main_code("reset")
 		self.initialize()
 		return '', 204
 
 	def stop(self):
+		self.logger.info("Stop endpoint called")
 		self.stop_main_code("stop")
 		return '', 204
 
 	def sync(self):
+		self.logger.debug("Sync endpoint called")
 		return jsonify({'last_update': self.last_update}), 200
 
 	def update(self):
+		self.logger.info("Update endpoint called")
 		data = request.get_json()
 		self.last_update = data
 		if hasattr(self, 'update_code_callback') and self.update_code_callback:
@@ -105,18 +121,22 @@ class Lighthouse:
 		return '', 204
 
 	def send_update(self, data):
+		self.logger.info("Sending update to all slaves")
 		for ip in self.config['slaves']:
 			if ip == self.config['self_addr']:
 				continue
 			try:
 				requests.post(f'http://{ip}/update', json=data, timeout=2)
+				self.logger.info("Sent update to %s", ip)
 			except Exception as e:
-				print(f'Failed to send update to {ip}: {e}')
+				self.logger.error(f'Failed to send update to {ip}: {e}')
 	
 	def monitor(self):
+		self.logger.info("Monitor thread started")
 		while not self.stop_monitor_thread:
 			try:
 				if self.timeout != 0 and self.timeout_start+self.timeout < time.time():
+					self.logger.info("Timeout reached, reinitializing")
 					self.stop_monitor_thread = True
 					self.custom_status = False
 					self.timeout = 0
@@ -127,14 +147,14 @@ class Lighthouse:
 					if self.config['slaves'] == []:
 						self.config['slaves'] = self.get_slaves(self.config['parent_addr'])
 					if parent_status not in ['running', "waiting"] and not self.status == 'running':
-						print('Parent down. Checking failover...')
+						self.logger.warning('Parent down. Checking failover...')
 						time.sleep(5*self.config['slaves'].index(self.config['self_addr']))
 						if not self.any_main_running():
+							self.logger.info("Promoting to active")
 							self.promote_to_active()
 			except Exception as e:
-				print('Error in monitor:', e)
+				self.logger.error('Error in monitor: %s', e)
 			
-
 			time.sleep(self.monitor_interval)
 
 	def ping_status(self, ip):
@@ -146,6 +166,7 @@ class Lighthouse:
 			else:
 				return 'IDLE'
 		except Exception:
+			self.logger.warning("Failed to ping status of %s", ip)
 			return 'DOWN'
 
 	def ping_raw_status(self, ip):
@@ -154,6 +175,7 @@ class Lighthouse:
 			data = res.json()
 			return data['status']
 		except Exception:
+			self.logger.warning("Failed to ping raw status of %s", ip)
 			return None
 
 	def get_slaves(self, ip):
@@ -163,6 +185,7 @@ class Lighthouse:
 			ip_list = data['slaves'] if self.config['parent_addr'] in data['slaves'] else [self.config['parent_addr']] + data['slaves']
 			return ip_list
 		except Exception:
+			self.logger.warning("Failed to get slaves from %s", ip)
 			return []
 
 	def any_main_running(self):
@@ -175,20 +198,23 @@ class Lighthouse:
 		return False
 
 	def promote_to_active(self):
+		self.logger.info("Promoting node to active")
 		self.start_main_code()
 		self.notify_slaves('reset')
 
 	def notify_slaves(self, endpoint):
+		self.logger.info("Notifying slaves at endpoint /%s", endpoint.lstrip("/"))
 		for ip in self.config['slaves']:
 			if ip == self.config['self_addr']:
 				continue
 			try:
 				requests.post(f'http://{ip}/{endpoint.lstrip("/")}', timeout=2)
+				self.logger.info("Notified %s", ip)
 			except Exception:
-				print(f'Failed to notify {ip}')
+				self.logger.error(f'Failed to notify {ip}')
 
 	def start_main_code(self):
-		print('Starting main code...')
+		self.logger.info('Starting main code...')
 		self.status = 'running'
 		if self.start_code_callback:
 			if self.pass_flask_app:
@@ -197,6 +223,7 @@ class Lighthouse:
 				self.start_code_callback()
 
 	def get_all_statuses(self):
+		self.logger.info("Getting all statuses")
 		res = []
 		if self.config["self_addr"] not in self.config["slaves"]:
 			res.append({
@@ -225,6 +252,7 @@ class Lighthouse:
 						'status': data['status']
 					})
 				except Exception:
+					self.logger.warning("Failed to get status from %s", ip)
 					res.append({
 						'name': 'Server',
 						'status': 'crashed'
@@ -232,7 +260,7 @@ class Lighthouse:
 		return res
 
 	def stop_main_code(self, action):
-		print('Stopping main code...')
+		self.logger.info('Stopping main code...')
 		self.status = 'waiting' if not self.custom_status else self.status
 		if self.stop_code_callback:
 			if self.stop_code_callback.__code__.co_argcount > 0:
@@ -241,6 +269,7 @@ class Lighthouse:
 				self.stop_code_callback()
 
 	def run(self, app=None):
+		self.logger.info("Running Lighthouse Flask app")
 		self.app = app
 		if self.app is None:
 			self.app = Flask(__name__)
