@@ -7,7 +7,7 @@ class Lighthouse:
 	def __init__(self, config_path, pass_flask_app = False, interval = 5):
 		self.config = self.load_config(config_path)
 		self.pass_flask_app = pass_flask_app
-		self.stop = False
+		self.stop_monitor_thread = False
 		self.monitor_interval = interval
 		self.status = 'waiting'
 		self.custom_status = False
@@ -15,7 +15,9 @@ class Lighthouse:
 		self.stop_code_callback = None
 		self.update_code_callback = None
 		self.start_conditions = []
+		self.timeout_start = 0
 		self.timeout = 0
+		self.last_update = None
 	
 	def start_callback(self, func):
 		self.start_code_callback = func
@@ -31,12 +33,28 @@ class Lighthouse:
 
 	def initialize(self):
 		if self.config['role'] == 'master' and self.timeout == 0:
+			self.sync_from_slaves()
 			self.notify_slaves("reset")
 			self.start_main_code()
 		elif not hasattr(self, 'monitor_thread') or not self.monitor_thread.is_alive():
 			self.stop_event = threading.Event()
 			self.monitor_thread = threading.Thread(target=self.monitor, daemon=True)
 			self.monitor_thread.start()
+	
+	def sync_from_slaves(self):
+		for ip in self.config['slaves']:
+			if ip == self.config['self_addr']:
+				continue
+			try:
+				resp = requests.get(f'http://{ip}/sync', timeout=2)
+				data = resp.json()
+				if data.get('last_update'):
+					# Optionally, apply this update to master
+					if self.update_code_callback:
+						self.update_code_callback(data['last_update'])
+					break  # Use the first available state
+			except Exception as e:
+				print(f"Failed to sync from slave {ip}: {e}")
 
 	def load_config(self, path):
 		with open(path, 'r') as f:
@@ -47,10 +65,12 @@ class Lighthouse:
 		self.app.add_url_rule("/reset", "reset", self.reset, methods=["POST"])
 		self.app.add_url_rule("/stop", "stop", self.stop, methods=["POST"])
 		self.app.add_url_rule("/update", "update", self.update, methods=["POST"])
+		self.app.add_url_rule("/sync", "sync", self.sync, methods=["GET"])
 
 	def set_temp_status(self, status_msg = "stopped temporarily", timeout = 60):
 		self.custom_status = True
 		self.status = status_msg
+		self.timeout_start = time.time()
 		self.timeout = timeout
 		self.stop_main_code("stop")
 
@@ -70,10 +90,15 @@ class Lighthouse:
 		self.stop_main_code("stop")
 		return '', 204
 
+	def sync(self):
+		return jsonify({'last_update': self.last_update}), 200
+
 	def update(self):
+		data = request.get_json()
+		self.last_update = data
 		if hasattr(self, 'update_code_callback') and self.update_code_callback:
 			if self.update_code_callback.__code__.co_argcount > 0:
-				self.update_code_callback(request.get_json())
+				self.update_code_callback(data)
 			else:
 				self.update_code_callback()
 		return '', 204
@@ -88,10 +113,10 @@ class Lighthouse:
 				print(f'Failed to send update to {ip}: {e}')
 	
 	def monitor(self):
-		while not self.stop:
+		while not self.stop_monitor_thread:
 			try:
 				if self.timeout != 0 and time.time()+self.timeout < time.time():
-					self.stop = True
+					self.stop_monitor_thread = True
 					self.custom_status = False
 					self.monitor_thread.join()
 					del self.monitor_thread
@@ -111,7 +136,7 @@ class Lighthouse:
 			
 
 			time.sleep(self.monitor_interval)
-		self.stop = False
+		self.stop_monitor_thread = False
 
 	def ping_status(self, ip):
 		try:
@@ -152,7 +177,7 @@ class Lighthouse:
 
 	def promote_to_active(self):
 		self.start_main_code()
-		self.notify_slaves('/reset')
+		self.notify_slaves('reset')
 
 	def notify_slaves(self, endpoint):
 		for ip in self.config['slaves']:
