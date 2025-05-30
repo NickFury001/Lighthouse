@@ -139,9 +139,13 @@ def start(app, port):
 * `POST /reset` – Stops main code and resets status
 * `POST /stop` – Gracefully stops the main code
 * `POST /update` – Calls the registered update callback with the JSON body of the request
+* `GET /sync` – Returns the last update received by this node (used for state synchronization between nodes)
 
 ## 🛠️ Notes
 
+* All API endpoints are registered on the Flask app.
+* The class is designed for extensibility via callbacks.
+* For advanced usage, see the DOCUMENTATION.md and code comments.
 * Use different ports and IPs per node
 * All nodes must be able to reach each other via HTTP
 * Ensure the bot process is stateless or uses external storage for shared state
