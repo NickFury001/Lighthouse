@@ -146,7 +146,7 @@ class Lighthouse:
 				return 'UP'
 			else:
 				return 'IDLE'
-		except:
+		except Exception:
 			return 'DOWN'
 
 	def ping_raw_status(self, ip):
@@ -154,7 +154,7 @@ class Lighthouse:
 			res = requests.get(f'http://{ip}/status', timeout=2)
 			data = res.json()
 			return data['status']
-		except:
+		except Exception:
 			return None
 
 	def get_slaves(self, ip):
@@ -163,7 +163,7 @@ class Lighthouse:
 			data = res.json()
 			ip_list = data['slaves'] if self.config['parent_addr'] in data['slaves'] else [self.config['parent_addr']] + data['slaves']
 			return ip_list
-		except:
+		except Exception:
 			return []
 
 	def any_main_running(self):
@@ -184,8 +184,8 @@ class Lighthouse:
 			if ip == self.config['self_addr']:
 				continue
 			try:
-				requests.post(f'http://{ip}/{endpoint.lstrip('/')}', timeout=2)
-			except:
+				requests.post(f'http://{ip}/{endpoint.lstrip("/")}', timeout=2)
+			except Exception:
 				print(f'Failed to notify {ip}')
 
 	def start_main_code(self):
@@ -225,7 +225,7 @@ class Lighthouse:
 						'ip': ip,
 						'status': data['status']
 					})
-				except:
+				except Exception:
 					res.append({
 						'name': 'Server',
 						'status': 'crashed'
