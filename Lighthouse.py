@@ -6,11 +6,11 @@ import logging
 
 class Lighthouse: 
 	def __init__(self, config_path, pass_flask_app = False, interval = 5):
-		self.logger = logging.getLogger("Lighthouse")  # Moved up before load_config
 		logging.basicConfig(
 			level=logging.INFO,
 			format="%(asctime)s [%(levelname)s] %(message)s",
 		)
+		self.logger = logging.getLogger("Lighthouse")
 		self.config = self.load_config(config_path)
 		self.pass_flask_app = pass_flask_app
 		self.stop_monitor_thread = threading.Event()  # Use Event for thread safety
@@ -44,7 +44,6 @@ class Lighthouse:
 			self.notify_slaves("reset")
 			self.start_main_code()
 		elif not hasattr(self, 'monitor_thread') or not self.monitor_thread.is_alive():
-			self.stop_event = threading.Event()
 			self.stop_monitor_thread.clear()  # Reset event
 			self.monitor_thread = threading.Thread(target=self.monitor, daemon=True)
 			self.monitor_thread.start()
@@ -226,7 +225,9 @@ class Lighthouse:
 			if self.pass_flask_app:
 				if not hasattr(self, 'app') or self.app is None:
 					self.app = Flask(__name__)
-				self.start_code_callback(self.app, self.config['self_addr'].split(':')[1])
+				# Use rsplit to handle IPv6 or multiple colons
+				port = self.config['self_addr'].rsplit(':', 1)[1]
+				self.start_code_callback(self.app, port)
 			else:
 				self.start_code_callback()
 
