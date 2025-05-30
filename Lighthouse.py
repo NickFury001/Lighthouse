@@ -238,6 +238,8 @@ class Lighthouse:
 		if self.stop_code_callback:
 			if self.stop_code_callback.__code__.co_argcount > 0:
 				self.stop_code_callback(action)
+			else:
+				self.stop_code_callback()
 
 	def run(self, app=None):
 		self.app = app
