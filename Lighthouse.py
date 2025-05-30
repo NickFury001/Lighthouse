@@ -29,7 +29,7 @@ class Lighthouse:
 		self.logger = logging.getLogger("Lighthouse")
 		self.config = self.load_config(config_path)
 		self.pass_flask_app = pass_flask_app
-		self.stop_monitor_thread = threading.Event()  # Use Event for thread safety
+		self.stop_monitor_thread = threading.Event()
 		self.monitor_interval = interval
 		self.status = 'waiting'
 		self.custom_status = False
