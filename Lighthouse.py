@@ -6,9 +6,14 @@ import logging
 
 class Lighthouse: 
 	def __init__(self, config_path, pass_flask_app = False, interval = 5):
+		self.logger = logging.getLogger("Lighthouse")  # Moved up before load_config
+		logging.basicConfig(
+			level=logging.INFO,
+			format="%(asctime)s [%(levelname)s] %(message)s",
+		)
 		self.config = self.load_config(config_path)
 		self.pass_flask_app = pass_flask_app
-		self.stop_monitor_thread = False
+		self.stop_monitor_thread = threading.Event()  # Use Event for thread safety
 		self.monitor_interval = interval
 		self.status = 'waiting'
 		self.custom_status = False
@@ -19,12 +24,7 @@ class Lighthouse:
 		self.timeout_start = 0
 		self.timeout = 0
 		self.last_update = None
-		self.logger = logging.getLogger("Lighthouse")
-		logging.basicConfig(
-			level=logging.INFO,
-			format="%(asctime)s [%(levelname)s] %(message)s",
-		)
-	
+
 	def start_callback(self, func):
 		self.start_code_callback = func
 		return func
@@ -45,7 +45,7 @@ class Lighthouse:
 			self.start_main_code()
 		elif not hasattr(self, 'monitor_thread') or not self.monitor_thread.is_alive():
 			self.stop_event = threading.Event()
-			self.stop_monitor_thread = False
+			self.stop_monitor_thread.clear()  # Reset event
 			self.monitor_thread = threading.Thread(target=self.monitor, daemon=True)
 			self.monitor_thread.start()
 	
@@ -133,22 +133,28 @@ class Lighthouse:
 	
 	def monitor(self):
 		self.logger.info("Monitor thread started")
-		while not self.stop_monitor_thread:
+		while not self.stop_monitor_thread.is_set():
 			try:
 				if self.timeout != 0 and self.timeout_start+self.timeout < time.time():
 					self.logger.info("Timeout reached, reinitializing")
-					self.stop_monitor_thread = True
+					self.stop_monitor_thread.set()
 					self.custom_status = False
 					self.timeout = 0
 					self.initialize()
 					break
 				elif self.config['role'] == "slave":
 					parent_status = self.ping_raw_status(self.config['parent_addr'])
-					if self.config['slaves'] == []:
-						self.config['slaves'] = self.get_slaves(self.config['parent_addr'])
+					if not self.config['slaves']:
+						slaves = self.get_slaves(self.config['parent_addr'])
+						if slaves:
+							self.config['slaves'] = slaves
 					if parent_status not in ['running', "waiting"] and not self.status == 'running':
 						self.logger.warning('Parent down. Checking failover...')
-						time.sleep(5*self.config['slaves'].index(self.config['self_addr']))
+						try:
+							sleep_time = 5 * self.config['slaves'].index(self.config['self_addr'])
+						except ValueError:
+							sleep_time = 5
+						time.sleep(sleep_time)
 						if not self.any_main_running():
 							self.logger.info("Promoting to active")
 							self.promote_to_active()
@@ -218,6 +224,8 @@ class Lighthouse:
 		self.status = 'running'
 		if self.start_code_callback:
 			if self.pass_flask_app:
+				if not hasattr(self, 'app') or self.app is None:
+					self.app = Flask(__name__)
 				self.start_code_callback(self.app, self.config['self_addr'].split(':')[1])
 			else:
 				self.start_code_callback()
@@ -225,38 +233,25 @@ class Lighthouse:
 	def get_all_statuses(self):
 		self.logger.info("Getting all statuses")
 		res = []
-		if self.config["self_addr"] not in self.config["slaves"]:
-			res.append({
-				'name': self.config['name'] if 'name' in self.config else 'Server',
-				'ip': self.config['self_addr'],
-				'status': self.status
-			})
-		if self.config['role'] != 'master':
-			ip_list = self.config['slaves'] if self.config['parent_addr'] in self.config['slaves'] else [self.config['parent_addr']] + self.config['slaves']
-		else:
-			ip_list = self.config['slaves']
+		seen_ips = set()
+		def add_status(ip, name, status):
+			if ip not in seen_ips:
+				res.append({'name': name, 'ip': ip, 'status': status})
+				seen_ips.add(ip)
+		add_status(self.config['self_addr'], self.config.get('name', 'Server'), self.status)
+		ip_list = self.config['slaves']
+		if self.config['role'] != 'master' and 'parent_addr' in self.config and self.config['parent_addr'] not in ip_list:
+			ip_list = [self.config['parent_addr']] + ip_list
 		for ip in ip_list:
 			if ip == self.config['self_addr']:
-				res.append({
-					'name': self.config['name'] if 'name' in self.config else 'Server',
-					'ip': self.config['self_addr'],
-					'status': self.status
-				})
-			else:
-				try:
-					response = requests.get(f'http://{ip}/status', timeout=2)
-					data = response.json()
-					res.append({
-						'name': data['name'] if 'name' in data else 'Server',
-						'ip': ip,
-						'status': data['status']
-					})
-				except Exception:
-					self.logger.warning("Failed to get status from %s", ip)
-					res.append({
-						'name': 'Server',
-						'status': 'crashed'
-					})
+				continue
+			try:
+				response = requests.get(f'http://{ip}/status', timeout=2)
+				data = response.json()
+				add_status(ip, data.get('name', 'Server'), data['status'])
+			except Exception:
+				self.logger.warning("Failed to get status from %s", ip)
+				add_status(ip, 'Server', 'crashed')
 		return res
 
 	def stop_main_code(self, action):
