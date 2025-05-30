@@ -119,10 +119,9 @@ class Lighthouse:
 				if self.timeout != 0 and self.timeout_start+self.timeout < time.time():
 					self.stop_monitor_thread = True
 					self.custom_status = False
-					self.monitor_thread.join()
-					del self.monitor_thread
 					self.timeout = 0
 					self.initialize()
+					break
 				elif self.config['role'] == "slave":
 					parent_status = self.ping_raw_status(self.config['parent_addr'])
 					if self.config['slaves'] == []:
