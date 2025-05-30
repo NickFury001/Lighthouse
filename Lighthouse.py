@@ -90,7 +90,7 @@ class Lighthouse:
 			self.notify_slaves("reset")
 			self.start_main_code()
 		elif not hasattr(self, 'monitor_thread') or not self.monitor_thread.is_alive():
-			self.stop_monitor_thread.clear()  # Reset event
+			self.stop_monitor_thread.clear()
 			self.monitor_thread = threading.Thread(target=self.monitor, daemon=True)
 			self.monitor_thread.start()
 	
@@ -106,10 +106,9 @@ class Lighthouse:
 				data = resp.json()
 				if data.get('last_update'):
 					self.logger.info("Synced state from slave %s", ip)
-					# Optionally, apply this update to master
 					if self.update_code_callback:
 						self.update_code_callback(data['last_update'])
-					break  # Use the first available state
+					break
 			except Exception as e:
 				self.logger.error(f"Failed to sync from slave {ip}: {e}")
 
@@ -377,7 +376,6 @@ class Lighthouse:
 			if self.pass_flask_app:
 				if not hasattr(self, 'app') or self.app is None:
 					self.app = Flask(__name__)
-				# Use rsplit to handle IPv6 or multiple colons
 				port = self.config['self_addr'].rsplit(':', 1)[1]
 				self.start_code_callback(self.app, port)
 			else:
