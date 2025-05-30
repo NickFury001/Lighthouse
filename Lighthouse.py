@@ -115,7 +115,7 @@ class Lighthouse:
 	def monitor(self):
 		while not self.stop_monitor_thread:
 			try:
-				if self.timeout != 0 and time.time()+self.timeout < time.time():
+				if self.timeout != 0 and self.timeout_start+self.timeout < time.time():
 					self.stop_monitor_thread = True
 					self.custom_status = False
 					self.monitor_thread.join()
