@@ -253,16 +253,21 @@ class Lighthouse:
 						slaves = self.get_slaves(self.config['parent_addr'])
 						if slaves:
 							self.config['slaves'] = slaves
-					if parent_status not in ['running', "waiting"] and not self.status == 'running':
-						self.logger.warning('Parent down. Checking failover...')
-						try:
-							sleep_time = 5 * self.config['slaves'].index(self.config['self_addr'])
-						except ValueError:
-							sleep_time = 5
-						time.sleep(sleep_time)
-						if not self.any_main_running():
-							self.logger.info("Promoting to active")
-							self.promote_to_active()
+					if parent_status not in ['running', "waiting"]:
+						if not self.status == 'running':
+							self.logger.warning('Parent down. Checking failover...')
+							try:
+								sleep_time = 5 * self.config['slaves'].index(self.config['self_addr'])
+							except ValueError:
+								sleep_time = 5
+							time.sleep(sleep_time)
+							if not self.any_main_running():
+								self.logger.info("Promoting to active")
+								self.promote_to_active()
+					elif parent_status == 'running':
+						if self.status == 'running':
+							self.logger.info("Parent is running. Stopping main code.")
+							self.stop_main_code("stop")
 			except Exception as e:
 				self.logger.error('Error in monitor: %s', e)
 			
