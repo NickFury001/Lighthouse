@@ -421,7 +421,7 @@ class Lighthouse:
 				seen_ips.add(ip)
 		# If self_addr is not in ip_list, append it at the end
 		if self.config['self_addr'] not in seen_ips:
-			res.append({'name': self.config.get('name', 'Server'), 'ip': self.config['self_addr'], 'status': self.status})
+			res = [{'name': self.config.get('name', 'Server'), 'ip': self.config['self_addr'], 'status': self.status}] + res
 		return res
 
 	def stop_main_code(self, action):
