@@ -396,24 +396,32 @@ class Lighthouse:
 		self.logger.info("Getting all statuses")
 		res = []
 		seen_ips = set()
-		def add_status(ip, name, status):
-			if ip not in seen_ips:
-				res.append({'name': name, 'ip': ip, 'status': status})
-				seen_ips.add(ip)
-		add_status(self.config['self_addr'], self.config.get('name', 'Server'), self.status)
 		ip_list = self.config['slaves']
+		# If not master, parent may be included
 		if self.config['role'] != 'master' and 'parent_addr' in self.config and self.config['parent_addr'] not in ip_list:
 			ip_list = [self.config['parent_addr']] + ip_list
+
+		# Build statuses in the order of ip_list
 		for ip in ip_list:
+			if ip in seen_ips:
+				continue
 			if ip == self.config['self_addr']:
+				# Add self status
+				res.append({'name': self.config.get('name', 'Server'), 'ip': ip, 'status': self.status})
+				seen_ips.add(ip)
 				continue
 			try:
 				response = requests.get(f'http://{ip}/status', timeout=2)
 				data = response.json()
-				add_status(ip, data.get('name', 'Server'), data['status'])
+				res.append({'name': data.get('name', 'Server'), 'ip': ip, 'status': data['status']})
+				seen_ips.add(ip)
 			except Exception:
-				self.logger.warning("Failed to get status from %s", ip)
-				add_status(ip, 'Server', 'crashed')
+				self.logger.warning(f"Failed to get status from {ip}")
+				res.append({'name': 'Server', 'ip': ip, 'status': 'crashed'})
+				seen_ips.add(ip)
+		# If self_addr is not in ip_list, append it at the end
+		if self.config['self_addr'] not in seen_ips:
+			res.append({'name': self.config.get('name', 'Server'), 'ip': self.config['self_addr'], 'status': self.status})
 		return res
 
 	def stop_main_code(self, action):
