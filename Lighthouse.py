@@ -352,7 +352,35 @@ class Lighthouse:
 		"""
 		self.logger.info("Promoting node to active")
 		self.start_main_code()
-		self.notify_slaves('reset')
+		self.notify_lower_slaves('reset')
+
+	def notify_lower_slaves(self, endpoint):
+		"""
+		Notifies lower nodes (slaves or parent) at a given endpoint.
+
+		Args:
+			endpoint (str): The endpoint to notify (e.g., 'reset').
+		"""
+		self.logger.info("Notifying lower nodes at endpoint /%s", endpoint.lstrip("/"))
+		if self.config['role'] == 'master':
+			for ip in self.config['slaves']:
+				if ip == self.config['self_addr']:
+					continue
+				try:
+					requests.post(f'http://{ip}/{endpoint.lstrip("/")}', timeout=2)
+					self.logger.info("Notified %s", ip)
+				except Exception:
+					self.logger.error(f'Failed to notify {ip}')
+		else:
+			index = self.config['slaves'].index(self.config['self_addr'])
+			for ip in self.config['slaves'][index+1:]:
+				if ip == self.config['self_addr']:
+					continue
+				try:
+					requests.post(f'http://{ip}/{endpoint.lstrip("/")}', timeout=2)
+					self.logger.info("Notified %s", ip)
+				except Exception:
+					self.logger.error(f'Failed to notify {ip}')
 
 	def notify_slaves(self, endpoint):
 		"""
