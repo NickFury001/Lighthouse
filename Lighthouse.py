@@ -131,11 +131,11 @@ class Lighthouse:
 		Registers Flask routes for status, reset, stop, update, and sync endpoints.
 		"""
 		self.logger.info("Registering Flask routes")
-		self.app.add_url_rule("/status", "status", self.get_status, methods=["GET"])
-		self.app.add_url_rule("/reset", "reset", self.reset, methods=["POST"])
-		self.app.add_url_rule("/stop", "stop", self.stop, methods=["POST"])
-		self.app.add_url_rule("/update", "update", self.update, methods=["POST"])
-		self.app.add_url_rule("/sync", "sync", self.sync, methods=["GET"])
+		self.app.add_url_rule("/status", "status", self.get_status, methods=["GET"], subdomain=None)
+		self.app.add_url_rule("/reset", "reset", self.reset, methods=["POST"], subdomain=None)
+		self.app.add_url_rule("/stop", "stop", self.stop, methods=["POST"], subdomain=None)
+		self.app.add_url_rule("/update", "update", self.update, methods=["POST"], subdomain=None)
+		self.app.add_url_rule("/sync", "sync", self.sync, methods=["GET"], subdomain=None)
 
 	def set_temp_status(self, status_msg = "stopped temporarily", timeout = 60):
 		"""
