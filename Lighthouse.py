@@ -440,7 +440,7 @@ class Lighthouse:
 			if self.pass_flask_app:
 				if not hasattr(self, 'app') or self.app is None:
 					self.app = Flask(__name__)
-				port = self.config['self_addr'].rsplit(':', 1)[1]
+				port = self.config.get('host_port', self.config['self_addr'].rsplit(':', 1)[1])
 				self.start_code_callback(self.app, port)
 			else:
 				self.start_code_callback()
@@ -513,7 +513,8 @@ class Lighthouse:
 		if not self.pass_flask_app:
 			threading.Thread(target=self.initialize, daemon=True).start()
 			host, port = self.config['self_addr'].split(':')
-			serve(self.app, host='0.0.0.0', port=int(port))
+			bind_port = self.config.get('host_port', port)
+			serve(self.app, host='0.0.0.0', port=int(bind_port))
 		else:
 			self.initialize()
 			Event().wait()

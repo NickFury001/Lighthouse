@@ -24,3 +24,20 @@ Slave 1 (addr 0.0.0.2:8080)
 	"parent_addr": "0.0.0.1:8080",
 	"slaves": []
 }
+
+---
+
+Reverse Proxy Example (nginx redirects port 5000 -> 5001)
+
+Master behind nginx:
+{
+	"role": "master",
+	"self_addr": "hostname:5000",
+	"host_port": 5001,
+	"slaves": ["slave1:5000", "slave2:5000"],
+	"name": "Main Node"
+}
+
+- self_addr: Address other nodes use to reach this node (through nginx on port 5000)
+- host_port: Actual port Flask binds to (5001)
+- If host_port is omitted, Flask binds to the port from self_addr

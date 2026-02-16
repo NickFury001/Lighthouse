@@ -42,7 +42,7 @@ Example for a **master**:
   "role": "master",
   "self_addr": "127.0.0.1:5000",
   "slaves": ["127.0.0.1:5001", "127.0.0.1:5002"],
-  "name": "Main Node" // Optional
+  "name": "Main Node"
 }
 ```
 
@@ -54,9 +54,26 @@ Example for a **slave**:
   "self_addr": "127.0.0.1:5001",
   "parent_addr": "127.0.0.1:5000",
   "slaves": [],
-  "name": "Backup Node 1" // Optional
+  "name": "Backup Node 1"
 }
 ```
+
+Example with **reverse proxy** (e.g., nginx):
+
+If you use a reverse proxy that redirects external port 5000 to internal port 5001, set `host_port` to the actual port Flask should bind to:
+
+```json
+{
+  "role": "master",
+  "self_addr": "hostname:5000",
+  "host_port": 5001,
+  "slaves": ["slave1:5000", "slave2:5000"],
+  "name": "Main Node"
+}
+```
+
+- `self_addr`: The address other nodes use to reach this node (through the proxy)
+- `host_port`: The actual port Flask binds to (optional, defaults to port from `self_addr`)
 
 ### 2. Create Your Main Bot or Process
 
@@ -125,11 +142,24 @@ def start(app, port):
 
 ## ⚙️ Configuration Options
 
+### Constructor Parameters
+
 | Parameter         | Description                                                        | Default      |
 |------------------|--------------------------------------------------------------------|-------------|
-| `config_path`    | Path to the JSON file that defines the node’s role, address, peers | *(required)*|
+| `config_path`    | Path to the JSON file that defines the node's role, address, peers | *(required)*|
 | `pass_flask_app` | Pass `Flask` app and port to `start_callback()`                    | `False`     |
 | `interval`       | Time (in seconds) between monitor checks                           | `5`         |
+
+### Config JSON Fields
+
+| Field          | Description                                                                 | Required |
+|----------------|-----------------------------------------------------------------------------|----------|
+| `role`         | Node role: `"master"` or `"slave"`                                          | Yes      |
+| `self_addr`    | Address other nodes use to reach this node (e.g., `"hostname:5000"`)        | Yes      |
+| `slaves`       | List of slave addresses                                                     | Yes      |
+| `parent_addr`  | Parent node address (required for slaves)                                   | Slaves   |
+| `name`         | Human-readable node name for status responses                               | No       |
+| `host_port`    | Actual port Flask binds to (use when behind a reverse proxy)                | No       |
 
 ---
 

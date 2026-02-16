@@ -14,6 +14,35 @@ Lighthouse(config_path, pass_flask_app=False, interval=5)
 - **pass_flask_app**: If True, passes the Flask app and port to the start callback.
 - **interval**: Monitor interval in seconds.
 
+### Config JSON Fields
+
+| Field          | Description                                                                 | Required |
+|----------------|-----------------------------------------------------------------------------|----------|
+| `role`         | Node role: `"master"` or `"slave"`                                          | Yes      |
+| `self_addr`    | Address other nodes use to reach this node (e.g., `"hostname:5000"`)        | Yes      |
+| `slaves`       | List of slave addresses                                                     | Yes      |
+| `parent_addr`  | Parent node address (required for slaves)                                   | Slaves   |
+| `name`         | Human-readable node name for status responses                               | No       |
+| `host_port`    | Actual port Flask binds to (use when behind a reverse proxy)                | No       |
+
+#### Reverse Proxy Support (`host_port`)
+
+When running behind a reverse proxy (e.g., nginx) that redirects traffic from one port to another, use `host_port` to specify the actual port Flask should bind to:
+
+```json
+{
+  "role": "master",
+  "self_addr": "hostname:5000",
+  "host_port": 5001,
+  "slaves": ["slave1:5000"]
+}
+```
+
+- `self_addr` port (5000): The port other nodes use to communicate (through proxy)
+- `host_port` (5001): The port Flask actually binds to
+
+If `host_port` is not set, Flask binds to the port from `self_addr`.
+
 ---
 
 ## Methods
