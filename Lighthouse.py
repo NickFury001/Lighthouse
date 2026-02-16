@@ -126,6 +126,25 @@ class Lighthouse:
 		with open(path, 'r') as f:
 			return json.load(f)
 	
+	def is_authorized_ip(self):
+		"""
+		Checks if the request IP is authorized (parent or slave).
+
+		Returns:
+			bool: True if authorized, False otherwise.
+		"""
+		remote_ip = request.remote_addr
+		allowed_ips = set()
+		# Add parent IP if configured
+		if 'parent_addr' in self.config:
+			allowed_ips.add(self.config['parent_addr'].rsplit(':', 1)[0])
+		# Add all slave IPs
+		for addr in self.config.get('slaves', []):
+			allowed_ips.add(addr.rsplit(':', 1)[0])
+		# Add self IP
+		allowed_ips.add(self.config['self_addr'].rsplit(':', 1)[0])
+		return remote_ip in allowed_ips
+
 	def register_routes(self):
 		"""
 		Registers Flask routes for status, reset, stop, update, and sync endpoints.
@@ -171,8 +190,11 @@ class Lighthouse:
 		Handles the /reset endpoint. Stops main code and reinitializes the node.
 
 		Returns:
-			Response: Empty response with status 204.
+			Response: Empty response with status 204, or 403 if unauthorized.
 		"""
+		if not self.is_authorized_ip():
+			self.logger.warning("Unauthorized reset attempt from %s", request.remote_addr)
+			return jsonify({'error': 'Unauthorized'}), 403
 		self.logger.info("Reset endpoint called")
 		self.stop_main_code("reset")
 		self.initialize()
@@ -183,8 +205,11 @@ class Lighthouse:
 		Handles the /stop endpoint. Stops the main code.
 
 		Returns:
-			Response: Empty response with status 204.
+			Response: Empty response with status 204, or 403 if unauthorized.
 		"""
+		if not self.is_authorized_ip():
+			self.logger.warning("Unauthorized stop attempt from %s", request.remote_addr)
+			return jsonify({'error': 'Unauthorized'}), 403
 		self.logger.info("Stop endpoint called")
 		self.stop_main_code("stop")
 		return '', 204
@@ -194,8 +219,11 @@ class Lighthouse:
 		Handles the /sync endpoint. Returns the last update as JSON.
 
 		Returns:
-			Response: Flask JSON response with last_update.
+			Response: Flask JSON response with last_update, or 403 if unauthorized.
 		"""
+		if not self.is_authorized_ip():
+			self.logger.warning("Unauthorized sync attempt from %s", request.remote_addr)
+			return jsonify({'error': 'Unauthorized'}), 403
 		self.logger.debug("Sync endpoint called")
 		return jsonify({'last_update': self.last_update}), 200
 
@@ -204,8 +232,11 @@ class Lighthouse:
 		Handles the /update endpoint. Updates the node's state with provided data.
 
 		Returns:
-			Response: Empty response with status 204.
+			Response: Empty response with status 204, or 403 if unauthorized.
 		"""
+		if not self.is_authorized_ip():
+			self.logger.warning("Unauthorized update attempt from %s", request.remote_addr)
+			return jsonify({'error': 'Unauthorized'}), 403
 		self.logger.info("Update endpoint called")
 		data = request.get_json()
 		self.last_update = data
